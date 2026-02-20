@@ -3,147 +3,96 @@ const state = {
     toastTimeoutId: null
 };
 
+// BAŞLANGIÇ
 document.addEventListener('DOMContentLoaded', () => {
     bindUiEvents();
     restoreSession();
 });
 
 function bindUiEvents() {
-    document.getElementById('support-button')?.addEventListener('click', () => {
-        notify('Canlı destek ekibine bağlanılıyor...');
-    });
-
-    document.getElementById('account-detail-button')?.addEventListener('click', () => {
-        if (!state.currentUser) {
-            notify('Önce giriş yapmalısınız.');
-            openAuthModal();
-            return;
-        }
-
-        notify(`Hesap bakiyeniz: ${formatCurrency(state.currentUser.balance)}`);
-    });
-
-    document.getElementById('iban-share-button')?.addEventListener('click', async () => {
-        if (!state.currentUser?.iban) {
-            notify('Önce giriş yapmalısınız.');
-            openAuthModal();
-            return;
-        }
-
-        if (navigator.clipboard?.writeText) {
-            await navigator.clipboard.writeText(state.currentUser.iban);
-            notify('IBAN kopyalandı.');
-            return;
-        }
-
-        notify(`IBAN: ${state.currentUser.iban}`);
-    });
-
-    document.getElementById('card-detail-button')?.addEventListener('click', () => {
-        notify('Kart detayları açıldı: Kullanılabilir limit ₺37.550,00');
-    });
-
-    document.getElementById('transfer-button')?.addEventListener('click', handleTransfer);
-    document.getElementById('logout-button')?.addEventListener('click', logout);
-
-    document.getElementById('show-login')?.addEventListener('click', () => switchAuthTab('login'));
-    document.getElementById('show-register')?.addEventListener('click', () => switchAuthTab('register'));
+    // Auth Butonları
     document.getElementById('login-button')?.addEventListener('click', handleLogin);
     document.getElementById('register-button')?.addEventListener('click', handleRegister);
+    document.getElementById('show-login')?.addEventListener('click', () => switchAuthTab('login'));
+    document.getElementById('show-register')?.addEventListener('click', () => switchAuthTab('register'));
+    
+    // İşlem Butonları
+    document.getElementById('transfer-button')?.addEventListener('click', handleTransfer);
+    document.getElementById('logout-button')?.addEventListener('click', logout);
 }
 
-function restoreSession() {
-    const username = localStorage.getItem('bankapp_username');
-    if (!username) {
-        openAuthModal();
+// MENÜ GEÇİŞ FONKSİYONU
+window.showSection = function(id, element) {
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    
+    document.getElementById(id)?.classList.add('active');
+    element?.classList.add('active');
+
+    const titles = { dashboard: 'Genel Bakış', transfer: 'Para Transferi', cards: 'Kartlarım' };
+    document.getElementById('page-title').textContent = titles[id] || 'A. Bank';
+};
+
+// GİZLİLİK MODU (GÖZ İKONU)
+window.togglePrivacy = function() {
+    const balanceEl = document.getElementById('dashboard-balance');
+    const icon = document.getElementById('privacy-icon');
+    const isHidden = balanceEl.textContent === '••••••';
+
+    if (!isHidden) {
+        balanceEl.dataset.oldValue = balanceEl.textContent;
+        balanceEl.textContent = '••••••';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        balanceEl.textContent = balanceEl.dataset.oldValue || formatCurrency(state.currentUser?.balance);
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+};
+
+// VERİ YÜKLEME VE GÜNCELLEME
+function setUser(account) {
+    state.currentUser = account;
+    localStorage.setItem('bankapp_username', account.username);
+    
+    // UI Güncelle
+    document.getElementById('header-username').textContent = account.username;
+    document.getElementById('header-avatar').textContent = account.username.charAt(0).toUpperCase();
+    document.getElementById('dashboard-balance').textContent = formatCurrency(account.balance);
+    document.getElementById('dashboard-iban').textContent = `IBAN: ${account.iban}`;
+    document.getElementById('card-owner').textContent = account.username.toUpperCase();
+    
+    renderTransactions(account.transactions || []);
+}
+
+function renderTransactions(transactions) {
+    const list = document.getElementById('recent-transactions');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (transactions.length === 0) {
+        list.innerHTML = `<tr><td class="p-8 text-center text-slate-400 text-sm italic">Henüz bir işlem bulunmuyor.</td></tr>`;
         return;
     }
 
-    fetch(`/api/account/${encodeURIComponent(username)}`)
-        .then(response => response.ok ? response.json() : Promise.reject())
-        .then(account => {
-            setUser(account);
-            closeAuthModal();
-        })
-        .catch(() => {
-            openAuthModal();
-        });
+    transactions.slice().reverse().forEach(tx => {
+        const row = document.createElement('tr');
+        row.className = "border-b border-slate-50 hover:bg-slate-50 transition";
+        row.innerHTML = `
+            <td class="px-8 py-4 font-medium text-slate-700 text-sm">${tx.note}</td>
+            <td class="px-8 py-4 text-right font-bold text-red-600 text-sm">-${formatCurrency(tx.amount)}</td>
+        `;
+        list.appendChild(row);
+    });
 }
 
-function switchAuthTab(tab) {
-    const isLogin = tab === 'login';
-
-    document.getElementById('login-form')?.classList.toggle('hidden', !isLogin);
-    document.getElementById('register-form')?.classList.toggle('hidden', isLogin);
-
-    document.getElementById('show-login')?.classList.toggle('bg-white', isLogin);
-    document.getElementById('show-login')?.classList.toggle('text-slate-700', isLogin);
-    document.getElementById('show-register')?.classList.toggle('bg-white', !isLogin);
-    document.getElementById('show-register')?.classList.toggle('text-slate-700', !isLogin);
-}
-
-async function handleLogin() {
-    const username = document.getElementById('login-username')?.value.trim();
-    const password = document.getElementById('login-password')?.value;
-
-    if (!username || !password) {
-        notify('Kullanıcı adı ve şifre zorunlu.');
-        return;
-    }
-
-    const result = await postJson('/api/auth/login', { username, password });
-    if (!result.ok) {
-        notify(result.message || 'Giriş başarısız.');
-        return;
-    }
-
-    setUser(result.data);
-    closeAuthModal();
-    notify(`Hoş geldin ${result.data.username}.`);
-}
-
-async function handleRegister() {
-    const username = document.getElementById('register-username')?.value.trim();
-    const password = document.getElementById('register-password')?.value;
-
-    if (!username || !password) {
-        notify('Kullanıcı adı ve şifre zorunlu.');
-        return;
-    }
-
-    const result = await postJson('/api/auth/register', { username, password });
-    if (!result.ok) {
-        notify(result.message || 'Kayıt başarısız.');
-        return;
-    }
-
-    setUser(result.data);
-    closeAuthModal();
-    notify('Kayıt başarılı, hesabınız oluşturuldu.');
-}
-
+// TRANSFER İŞLEMİ
 async function handleTransfer() {
-    if (!state.currentUser) {
-        notify('Transfer için giriş yapmalısınız.');
-        openAuthModal();
-        return;
-    }
+    const toIban = document.getElementById('to-iban').value.trim();
+    const amount = parseFloat(document.getElementById('transfer-amount').value);
+    const note = document.getElementById('transfer-note').value.trim() || "Para Transferi";
 
-    const ibanInput = document.getElementById('to-iban');
-    const amountInput = document.getElementById('transfer-amount');
-    const noteInput = document.getElementById('transfer-note');
-
-    const toIban = ibanInput?.value.trim() ?? '';
-    const amount = Number(amountInput?.value ?? 0);
-    const note = noteInput?.value.trim() ?? '';
-
-    if (!toIban || toIban.length < 8) {
-        notify('Lütfen geçerli bir IBAN girin.');
-        return;
-    }
-
-    if (!Number.isFinite(amount) || amount <= 0) {
-        notify('Transfer tutarı 0dan büyük olmalıdır.');
+    if (!toIban || isNaN(amount) || amount <= 0) {
+        notify("Lütfen geçerli IBAN ve tutar giriniz.");
         return;
     }
 
@@ -154,130 +103,72 @@ async function handleTransfer() {
         note
     });
 
-    if (!result.ok) {
-        notify(result.message || 'Transfer başarısız.');
-        return;
+    if (result.ok) {
+        setUser(result.data.account);
+        notify("Transfer başarıyla tamamlandı.");
+        document.getElementById('to-iban').value = '';
+        document.getElementById('transfer-amount').value = '';
+        document.getElementById('transfer-note').value = '';
+        showSection('dashboard', document.querySelector('[onclick*="dashboard"]'));
+    } else {
+        notify(result.message);
     }
-
-    state.currentUser = result.data.account;
-    renderUser();
-
-    amountInput.value = '';
-    noteInput.value = '';
-    ibanInput.value = '';
-
-    notify(`${formatCurrency(amount)} transfer edildi.`);
 }
 
-function setUser(account) {
-    state.currentUser = account;
-    localStorage.setItem('bankapp_username', account.username);
-    renderUser();
+// AUTH VE API YARDIMCILARI
+async function handleLogin() {
+    const u = document.getElementById('login-username').value;
+    const p = document.getElementById('login-password').value;
+    const res = await postJson('/api/auth/login', { username: u, password: p });
+    if (res.ok) { setUser(res.data); closeAuthModal(); notify("Giriş yapıldı."); }
+    else notify(res.message);
 }
 
-function renderUser() {
-    if (!state.currentUser) {
-        return;
+async function handleRegister() {
+    const u = document.getElementById('register-username').value;
+    const p = document.getElementById('register-password').value;
+    const res = await postJson('/api/auth/register', { username: u, password: p });
+    if (res.ok) { setUser(res.data); closeAuthModal(); notify("Hesap açıldı."); }
+    else notify(res.message);
+}
+
+async function restoreSession() {
+    const saved = localStorage.getItem('bankapp_username');
+    if (saved) {
+        const res = await getJson(`/api/account/${encodeURIComponent(saved)}`);
+        if (res.ok) { setUser(res.data); closeAuthModal(); return; }
     }
-
-    const firstLetter = state.currentUser.username.charAt(0).toUpperCase();
-    document.getElementById('header-username').textContent = state.currentUser.username;
-    document.getElementById('header-avatar').textContent = firstLetter;
-    document.getElementById('dashboard-balance').textContent = formatCurrency(state.currentUser.balance);
-    document.getElementById('dashboard-iban').textContent = `IBAN: ${state.currentUser.iban}`;
-    document.getElementById('from-account').value = `${state.currentUser.username} - ${formatCurrency(state.currentUser.balance)}`;
-    document.getElementById('card-owner').textContent = state.currentUser.username.toUpperCase();
-}
-
-function logout() {
-    localStorage.removeItem('bankapp_username');
-    state.currentUser = null;
     openAuthModal();
-    notify('Güvenli çıkış yapıldı.');
 }
 
-function openAuthModal() {
-    document.getElementById('auth-modal')?.classList.remove('hidden');
-}
-
-function closeAuthModal() {
-    document.getElementById('auth-modal')?.classList.add('hidden');
-}
-
-async function postJson(url, payload) {
+// YARDIMCI ARAÇLAR
+async function postJson(url, body) {
     try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-        if (!response.ok) {
-            return { ok: false, message: data?.message || 'İşlem başarısız.' };
-        }
-
-        return { ok: true, data };
-    } catch {
-        return { ok: false, message: 'Sunucuya ulaşılamıyor.' };
-    }
+        const r = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+        const d = await r.json();
+        return r.ok ? {ok:true, data:d} : {ok:false, message:d.message};
+    } catch { return {ok:false, message:"Sunucu hatası."}; }
 }
 
-function showSection(sectionId, element) {
-    const sections = document.querySelectorAll('.content-section');
-    sections.forEach(section => section.classList.remove('active'));
-
-    const links = document.querySelectorAll('.sidebar-link');
-    links.forEach(link => link.classList.remove('active'));
-
-    const targetSection = document.getElementById(sectionId);
-    if (targetSection) {
-        targetSection.classList.add('active');
-    }
-
-    if (element) {
-        element.classList.add('active');
-    }
-
-    updatePageTitle(sectionId);
+async function getJson(url) {
+    try { const r = await fetch(url); return r.ok ? {ok:true, data:await r.json()} : {ok:false}; }
+    catch { return {ok:false}; }
 }
 
-function updatePageTitle(id) {
-    const titleElement = document.getElementById('page-title');
-    const titles = {
-        dashboard: 'Genel Bakış',
-        transfer: 'Para Transfer İşlemleri',
-        cards: 'Kartlarım ve Limitlerim',
-        investment: 'Yatırım ve Piyasa Analizi'
-    };
-
-    if (titleElement && titles[id]) {
-        titleElement.innerText = titles[id];
-    }
+function formatCurrency(v) { return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(v || 0); }
+function notify(msg) {
+    const t = document.getElementById('status-toast');
+    t.textContent = msg; t.classList.remove('opacity-0', 'translate-y-24'); t.classList.add('opacity-100', 'translate-y-0');
+    if (state.toastTimeoutId) clearTimeout(state.toastTimeoutId);
+    state.toastTimeoutId = setTimeout(() => { t.classList.add('opacity-0', 'translate-y-24'); }, 3000);
 }
-
-function formatCurrency(value) {
-    return new Intl.NumberFormat('tr-TR', {
-        style: 'currency',
-        currency: 'TRY',
-        minimumFractionDigits: 2
-    }).format(value);
+function openAuthModal() { document.getElementById('auth-modal').classList.remove('hidden'); }
+function closeAuthModal() { document.getElementById('auth-modal').classList.add('hidden'); }
+function switchAuthTab(tab) {
+    const isL = tab === 'login';
+    document.getElementById('login-form').classList.toggle('hidden', !isL);
+    document.getElementById('register-form').classList.toggle('hidden', isL);
+    document.getElementById('show-login').className = isL ? 'py-3 rounded-xl bg-white text-sm font-bold text-slate-800 shadow-sm' : 'py-3 rounded-xl text-sm font-bold text-slate-500';
+    document.getElementById('show-register').className = !isL ? 'py-3 rounded-xl bg-white text-sm font-bold text-slate-800 shadow-sm' : 'py-3 rounded-xl text-sm font-bold text-slate-500';
 }
-
-function notify(message) {
-    const toast = document.getElementById('status-toast');
-    if (!toast) {
-        return;
-    }
-
-    toast.textContent = message;
-    toast.classList.remove('hidden');
-
-    if (state.toastTimeoutId) {
-        clearTimeout(state.toastTimeoutId);
-    }
-
-    state.toastTimeoutId = setTimeout(() => {
-        toast.classList.add('hidden');
-    }, 2500);
-}
+function logout() { localStorage.clear(); location.reload(); }

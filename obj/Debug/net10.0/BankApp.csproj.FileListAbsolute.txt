@@ -156,3 +156,9 @@
 /Users/omer/BankApp/obj/Debug/net10.0/BankApp.pdb
 /Users/omer/BankApp/obj/Debug/net10.0/BankApp.genruntimeconfig.cache
 /Users/omer/BankApp/obj/Debug/net10.0/ref/BankApp.dll
+/Users/omer/BankApp/bin/Debug/net10.0/BankApp.staticwebassets.runtime.json
+/Users/omer/BankApp/obj/Debug/net10.0/BankApp.RazorAssemblyInfo.cache
+/Users/omer/BankApp/obj/Debug/net10.0/BankApp.RazorAssemblyInfo.cs
+/Users/omer/BankApp/obj/Debug/net10.0/BankApp.sourcelink.json
+/Users/omer/BankApp/obj/Debug/net10.0/compressed/12ubdxifas-{0}-ll6431hlzu-ll6431hlzu.gz
+/Users/omer/BankApp/obj/Debug/net10.0/compressed/cupslftwmq-{0}-rllb6ncpdz-rllb6ncpdz.gz

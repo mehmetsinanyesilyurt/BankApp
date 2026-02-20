@@ -1,43 +1,61 @@
-using System.Collections.Concurrent;
+using System.Collections.Concurrent; // ConcurrentDictionary için Namespace eklenmeli
 
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddCors();
+
+var builder = WebApplication.CreateBuilder(args); 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
-app.UseCors(x => x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+app.UseCors("AllowAll");
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
 var users = new ConcurrentDictionary<string, BankUser>(StringComparer.OrdinalIgnoreCase);
 
-SeedUser("sinan", "123456", 842500.45m, "TR12 3456 7890 1234 5678 9012 34");
-SeedUser("demo", "demo123", 12500m, "TR98 0000 1111 2222 3333 4444 55");
-
-app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
+SeedUser("demo", "demo123", 12500m, "TR31 0006 7010 0000 0000 0000 01");
 
 app.MapPost("/api/auth/register", (RegisterRequest request) =>
 {
-    if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+    var username = request.Username?.Trim();
+    var password = request.Password?.Trim();
+
+    if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
     {
-        return Results.BadRequest(new { message = "Kullanıcı adı ve şifre zorunludur." });
+        return Results.BadRequest(new { message = "Kullanici adi ve sifre zorunludur." });
     }
 
-    var normalizedUsername = request.Username.Trim();
-    if (users.ContainsKey(normalizedUsername))
+    if (users.ContainsKey(username))
     {
-        return Results.BadRequest(new { message = "Bu kullanıcı adı zaten kayıtlı." });
+        return Results.BadRequest(new { message = "Bu kullanici adi zaten kayitli." });
     }
 
-    var user = new BankUser(
-        normalizedUsername,
-        request.Password,
-        1500m,
-        BuildIban());
-
-    if (!users.TryAdd(normalizedUsername, user))
+    var user = new BankUser
     {
-        return Results.BadRequest(new { message = "Kayıt sırasında bir hata oluştu." });
+        Username = username,
+        Password = password,
+        Balance = 1500m,
+        Iban = BuildIban()
+    };
+
+    user.Transactions.Add(new Transaction
+    {
+        Note = "Hesap olusturma",
+        Amount = 0m,
+        Date = DateTime.Now
+    });
+
+    if (!users.TryAdd(username, user))
+    {
+        return Results.BadRequest(new { message = "Kayit olusturulamadi." });
     }
 
     return Results.Ok(ToResponse(user));
@@ -45,9 +63,16 @@ app.MapPost("/api/auth/register", (RegisterRequest request) =>
 
 app.MapPost("/api/auth/login", (LoginRequest request) =>
 {
-    if (!users.TryGetValue(request.Username?.Trim() ?? string.Empty, out var user) || user.Password != request.Password)
+    var username = request.Username?.Trim();
+
+    if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(request.Password))
     {
-        return Results.BadRequest(new { message = "Kullanıcı adı veya şifre hatalı." });
+        return Results.BadRequest(new { message = "Kullanici adi ve sifre zorunludur." });
+    }
+
+    if (!users.TryGetValue(username, out var user) || user.Password != request.Password)
+    {
+        return Results.BadRequest(new { message = "Kullanici adi veya sifre hatali." });
     }
 
     return Results.Ok(ToResponse(user));
@@ -55,9 +80,11 @@ app.MapPost("/api/auth/login", (LoginRequest request) =>
 
 app.MapGet("/api/account/{username}", (string username) =>
 {
-    if (!users.TryGetValue(username.Trim(), out var user))
+    var normalized = username.Trim();
+
+    if (string.IsNullOrWhiteSpace(normalized) || !users.TryGetValue(normalized, out var user))
     {
-        return Results.NotFound(new { message = "Kullanıcı bulunamadı." });
+        return Results.NotFound(new { message = "Kullanici bulunamadi." });
     }
 
     return Results.Ok(ToResponse(user));
@@ -65,34 +92,43 @@ app.MapGet("/api/account/{username}", (string username) =>
 
 app.MapPost("/api/account/transfer", (TransferRequest request) =>
 {
-    if (string.IsNullOrWhiteSpace(request.Username) || !users.TryGetValue(request.Username.Trim(), out var user))
+    var username = request.Username?.Trim();
+    var toIban = request.ToIban?.Trim();
+
+    if (string.IsNullOrWhiteSpace(username) || !users.TryGetValue(username, out var user))
     {
-        return Results.NotFound(new { message = "Kullanıcı bulunamadı." });
+        return Results.NotFound(new { message = "Kullanici bulunamadi." });
     }
 
-    if (string.IsNullOrWhiteSpace(request.ToIban) || request.ToIban.Trim().Length < 8)
+    if (string.IsNullOrWhiteSpace(toIban) || toIban.Length < 10)
     {
-        return Results.BadRequest(new { message = "Geçerli bir alıcı IBAN giriniz." });
+        return Results.BadRequest(new { message = "Gecerli bir alici IBAN giriniz." });
     }
 
     if (request.Amount <= 0)
     {
-        return Results.BadRequest(new { message = "Tutar 0'dan büyük olmalıdır." });
+        return Results.BadRequest(new { message = "Tutar sifirdan buyuk olmali." });
     }
 
     lock (user)
     {
-        if (request.Amount > user.Balance)
+        if (user.Balance < request.Amount)
         {
             return Results.BadRequest(new { message = "Yetersiz bakiye." });
         }
 
         user.Balance -= request.Amount;
+        user.Transactions.Add(new Transaction
+        {
+            Note = string.IsNullOrWhiteSpace(request.Note) ? "Para transferi" : request.Note.Trim(),
+            Amount = request.Amount,
+            Date = DateTime.Now
+        });
     }
 
     return Results.Ok(new
     {
-        message = "Transfer başarılı.",
+        message = "Transfer basarili.",
         account = ToResponse(user)
     });
 });
@@ -101,39 +137,63 @@ app.Run();
 
 void SeedUser(string username, string password, decimal balance, string iban)
 {
-    users.TryAdd(username, new BankUser(username, password, balance, iban));
+    var user = new BankUser
+    {
+        Username = username,
+        Password = password,
+        Balance = balance,
+        Iban = iban
+    };
+
+    user.Transactions.Add(new Transaction
+    {
+        Note = "Hesap açılış bakiyesi",
+        Amount = 0m,
+        Date = DateTime.Now
+    });
+
+    users.TryAdd(username, user);
 }
 
 string BuildIban()
 {
-    var random = Random.Shared.Next(1000, 9999);
-    var randomSuffix = Random.Shared.Next(1000, 9999);
-    return $"TR90 {random} 1000 2000 3000 4000 {randomSuffix}";
+    return $"TR{Random.Shared.Next(10, 99)} {Random.Shared.Next(1000, 9999)} {Random.Shared.Next(1000, 9999)} {Random.Shared.Next(1000, 9999)} {Random.Shared.Next(1000, 9999)} {Random.Shared.Next(1000, 9999)}";
 }
 
-object ToResponse(BankUser user) => new
+static object ToResponse(BankUser user)
 {
-    username = user.Username,
-    balance = user.Balance,
-    iban = user.Iban
-};
+    return new
+    {
+        username = user.Username,
+        balance = user.Balance,
+        iban = user.Iban,
+        transactions = user.Transactions
+            .OrderByDescending(x => x.Date)
+            .Select(x => new
+            {
+                note = x.Note,
+                amount = x.Amount,
+                date = x.Date.ToString("yyyy-MM-dd HH:mm:ss")
+            })
+    };
+}
 
 record RegisterRequest(string Username, string Password);
 record LoginRequest(string Username, string Password);
 record TransferRequest(string Username, string ToIban, decimal Amount, string? Note);
 
-class BankUser
+class BankUser // Kullanıcı bilgilerini temsil eden sınıf
 {
-    public BankUser(string username, string password, decimal balance, string iban)
-    {
-        Username = username;
-        Password = password;
-        Balance = balance;
-        Iban = iban;
-    }
-
-    public string Username { get; }
-    public string Password { get; }
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
     public decimal Balance { get; set; }
-    public string Iban { get; }
+    public string Iban { get; set; } = string.Empty;
+    public List<Transaction> Transactions { get; set; } = new();
+}
+
+class Transaction // Kullanıcının yaptığı işlemleri temsil eden sınıf
+{
+    public string Note { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public DateTime Date { get; set; }
 }
