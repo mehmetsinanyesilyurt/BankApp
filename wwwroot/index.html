@@ -9,30 +9,22 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; overflow: hidden; }
-        
-        /* Aktif Menü Tasarımı */
+
         .sidebar-link.active {
             background: rgba(37, 99, 235, 0.15);
             color: #60a5fa;
             border-right: 4px solid #2563eb;
         }
-        
-        /* Geçiş Efektleri */
+
         .content-section { display: none; }
-        .content-section.active { 
-            display: block; 
-            animation: slideUp 0.4s ease-out; 
+        .content-section.active {
+            display: block;
+            animation: slideUp 0.4s ease-out;
         }
 
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
@@ -54,17 +46,17 @@
 
         <nav class="flex-1 mt-4" id="sidebar-nav">
             <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-4 px-8">İşlemler</p>
-            
+
             <button onclick="showSection('dashboard', this)" class="sidebar-link active w-full flex items-center px-8 py-4 text-slate-400 hover:text-white transition-all group">
                 <i class="fas fa-chart-pie w-8 text-lg group-hover:scale-110 transition"></i>
                 <span class="font-medium">Dashboard</span>
             </button>
-            
+
             <button onclick="showSection('transfer', this)" class="sidebar-link w-full flex items-center px-8 py-4 text-slate-400 hover:text-white transition-all group">
                 <i class="fas fa-random w-8 text-lg group-hover:scale-110 transition"></i>
                 <span class="font-medium">Para Transferi</span>
             </button>
-            
+
             <button onclick="showSection('cards', this)" class="sidebar-link w-full flex items-center px-8 py-4 text-slate-400 hover:text-white transition-all group">
                 <i class="fas fa-credit-card w-8 text-lg group-hover:scale-110 transition"></i>
                 <span class="font-medium">Kartlarım</span>
@@ -76,54 +68,56 @@
             </button>
         </nav>
 
-        <div class="p-6">
+        <div class="p-6 space-y-3">
             <div class="bg-slate-800/40 p-4 rounded-2xl border border-slate-700">
                 <p class="text-[10px] text-slate-500 font-bold uppercase">Yardım Merkezi</p>
                 <p class="text-xs mt-1 text-slate-300">7/24 Canlı Destek</p>
-                <button class="mt-3 w-full py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-xs font-bold transition">Bağlan</button>
+                <button id="support-button" class="mt-3 w-full py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-xs font-bold transition">Bağlan</button>
             </div>
+            <button id="logout-button" class="w-full py-2 bg-red-500/10 text-red-300 hover:bg-red-500 hover:text-white rounded-lg text-xs font-bold transition">Çıkış Yap</button>
         </div>
     </aside>
 
     <main class="flex-1 flex flex-col relative overflow-hidden">
-        
+
         <header class="h-20 bg-white/70 backdrop-blur-md border-b border-slate-200 px-8 flex justify-between items-center z-40">
             <h2 id="page-title" class="text-xl font-bold text-slate-800">Genel Bakış</h2>
-            
+
             <div class="flex items-center space-x-6">
                 <div class="hidden md:flex items-center space-x-2 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
                     <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                     <span class="text-xs font-bold text-slate-600">Piyasalar Açık</span>
                 </div>
-                
+
                 <div class="flex items-center space-x-3 pl-6 border-l border-slate-200">
                     <div class="text-right">
-                        <p class="text-sm font-bold text-slate-900">Sinan Yeşilyurt</p>
+                        <p id="header-username" class="text-sm font-bold text-slate-900">Misafir</p>
                         <p class="text-[10px] text-blue-600 font-bold uppercase">Gold Member</p>
                     </div>
-                    <div class="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg text-white font-bold">
-                        SY
+                    <div id="header-avatar" class="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg text-white font-bold">
+                        M
                     </div>
                 </div>
             </div>
         </header>
 
         <div class="flex-1 overflow-y-auto p-8 bg-[#f8fafc]" id="main-scroll-container">
-            
+
             <section id="dashboard" class="content-section active space-y-8">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-2 bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
                         <div class="relative z-10">
                             <p class="text-blue-200 text-sm font-medium uppercase tracking-widest">Toplam Kullanılabilir Bakiye</p>
-                            <h3 class="text-5xl font-black mt-4">₺842.500,45</h3>
+                            <h3 id="dashboard-balance" class="text-5xl font-black mt-4">₺0,00</h3>
+                            <p id="dashboard-iban" class="text-sm mt-4 text-blue-100 font-mono">IBAN: -</p>
                             <div class="mt-10 flex gap-4">
-                                <button class="bg-white/10 hover:bg-white/20 backdrop-blur-md px-6 py-2 rounded-xl text-sm transition font-medium">Hesap Detayı</button>
-                                <button class="bg-white/10 hover:bg-white/20 backdrop-blur-md px-6 py-2 rounded-xl text-sm transition font-medium italic">IBAN Paylaş</button>
+                                <button id="account-detail-button" class="bg-white/10 hover:bg-white/20 backdrop-blur-md px-6 py-2 rounded-xl text-sm transition font-medium">Hesap Detayı</button>
+                                <button id="iban-share-button" class="bg-white/10 hover:bg-white/20 backdrop-blur-md px-6 py-2 rounded-xl text-sm transition font-medium italic">IBAN Paylaş</button>
                             </div>
                         </div>
                         <i class="fas fa-shield-halved absolute right-10 bottom-10 text-9xl opacity-10"></i>
                     </div>
-                    
+
                     <div class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col justify-between">
                         <div>
                             <p class="text-slate-500 text-sm font-bold uppercase tracking-tighter">Aylık Limit Durumu</p>
@@ -146,37 +140,34 @@
                         <div class="space-y-6">
                             <div>
                                 <label class="block text-xs font-black text-slate-400 uppercase mb-2">Gönderen Hesap</label>
-                                <select class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 font-medium focus:ring-2 focus:ring-blue-500 outline-none">
-                                    <option>Ana Hesap - ...4492 (₺842.500,45)</option>
-                                    <option>Tasarruf Hesabı - ...1102 (₺12.000,00)</option>
-                                </select>
+                                <input id="from-account" type="text" class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 font-medium" disabled>
                             </div>
                             <div>
                                 <label class="block text-xs font-black text-slate-400 uppercase mb-2">Alıcı IBAN</label>
-                                <input type="text" placeholder="TR00 0000..." class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                                <input id="to-iban" type="text" placeholder="TR00 0000..." class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 font-mono focus:ring-2 focus:ring-blue-500 outline-none">
                             </div>
                         </div>
                         <div class="space-y-6">
                             <div>
                                 <label class="block text-xs font-black text-slate-400 uppercase mb-2">Tutar</label>
                                 <div class="relative">
-                                    <input type="number" placeholder="0.00" class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 font-bold text-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <input id="transfer-amount" type="number" placeholder="0.00" class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 font-bold text-xl focus:ring-2 focus:ring-blue-500 outline-none">
                                     <span class="absolute right-4 top-4 font-bold text-slate-400">TRY</span>
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-black text-slate-400 uppercase mb-2">Açıklama</label>
-                                <input type="text" placeholder="Örn: Kira Ödemesi" class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none">
+                                <input id="transfer-note" type="text" placeholder="Örn: Kira Ödemesi" class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none">
                             </div>
                         </div>
                     </div>
-                    <button class="mt-10 w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl font-black shadow-2xl shadow-blue-500/40 transition-all transform hover:-translate-y-1">TRANSFERİ GERÇEKLEŞTİR</button>
+                    <button id="transfer-button" class="mt-10 w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl font-black shadow-2xl shadow-blue-500/40 transition-all transform hover:-translate-y-1">TRANSFERİ GERÇEKLEŞTİR</button>
                 </div>
             </section>
 
             <section id="cards" class="content-section">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <div class="bg-gradient-to-br from-[#1e293b] to-[#0f172a] p-10 rounded-[3rem] text-white shadow-2xl relative h-64 flex flex-col justify-between border border-slate-700 group cursor-pointer hover:scale-[1.02] transition-transform">
+                    <button id="card-detail-button" class="bg-gradient-to-br from-[#1e293b] to-[#0f172a] p-10 rounded-[3rem] text-white shadow-2xl relative h-64 flex flex-col justify-between border border-slate-700 group cursor-pointer hover:scale-[1.02] transition-transform text-left w-full">
                         <div class="flex justify-between items-start">
                             <span class="text-xl font-black italic tracking-tighter opacity-80 uppercase">A. Bank Platinum</span>
                             <div class="w-12 h-10 bg-gradient-to-br from-yellow-200 to-yellow-600 rounded-lg opacity-80"></div>
@@ -185,11 +176,11 @@
                         <div class="flex justify-between items-end">
                             <div>
                                 <p class="text-[9px] opacity-40 uppercase font-bold">Kart Sahibi</p>
-                                <p class="text-sm font-bold tracking-widest">MEHMET SINAN YESILYURT</p>
+                                <p id="card-owner" class="text-sm font-bold tracking-widest">-</p>
                             </div>
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" class="h-8 grayscale group-hover:grayscale-0 transition">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" class="h-8 grayscale group-hover:grayscale-0 transition" alt="Mastercard">
                         </div>
-                    </div>
+                    </button>
                 </div>
             </section>
 
@@ -218,6 +209,33 @@
         </div>
     </main>
 </div>
+
+<div id="auth-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl">
+        <h3 class="text-2xl font-black text-slate-800">A. Bank Giriş</h3>
+        <p class="text-sm text-slate-500 mt-2">Devam etmek için giriş yapın veya kayıt olun.</p>
+
+        <div class="grid grid-cols-2 gap-2 mt-6 bg-slate-100 p-1 rounded-xl">
+            <button id="show-login" class="py-2 rounded-lg bg-white text-sm font-bold text-slate-700">Giriş</button>
+            <button id="show-register" class="py-2 rounded-lg text-sm font-bold text-slate-500">Kayıt</button>
+        </div>
+
+        <div id="login-form" class="mt-6 space-y-4">
+            <input id="login-username" type="text" placeholder="Kullanıcı adı" class="w-full p-3 rounded-xl border border-slate-200">
+            <input id="login-password" type="password" placeholder="Şifre" class="w-full p-3 rounded-xl border border-slate-200">
+            <button id="login-button" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold">Giriş Yap</button>
+            <p class="text-xs text-slate-500">Örnek kullanıcı: <b>sinan</b> / <b>123456</b></p>
+        </div>
+
+        <div id="register-form" class="mt-6 space-y-4 hidden">
+            <input id="register-username" type="text" placeholder="Yeni kullanıcı adı" class="w-full p-3 rounded-xl border border-slate-200">
+            <input id="register-password" type="password" placeholder="Yeni şifre" class="w-full p-3 rounded-xl border border-slate-200">
+            <button id="register-button" class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold">Kayıt Ol</button>
+        </div>
+    </div>
+</div>
+
+<div id="status-toast" class="hidden fixed bottom-8 right-8 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl z-[70] text-sm font-medium"></div>
 
 <script src="app.js"></script>
 
