@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SOMbank | Dijital Bankacılık</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap");
+
+        :root {
+            --nav-bg: #ffffff;
+            --content-bg: #fcfcfd;
+            --panel: #ffffff;
+            --muted: #6b7280;
+            --brand: #c7931f;
+            --brand-strong: #9f6a0b;
+            --brand-soft: #fff6df;
+            --text: #111827;
+            --border: #e8ecf1;
+            --ring: rgba(199, 147, 31, 0.24);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Manrope", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(1100px 500px at 105% -10%, #fff5d9 0%, transparent 58%),
+                radial-gradient(800px 420px at -5% 110%, #fff9ea 0%, transparent 64%),
+                linear-gradient(180deg, #ffffff 0%, #fcfcfd 100%);
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        h1, h2, h3, h4, h5 {
+            font-family: "Space Grotesk", sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .content-scroll {
+            overflow: visible;
+        }
+
+        .content-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px) scale(0.995);
+            transition: opacity 240ms ease, transform 240ms ease;
+        }
+
+        .content-section.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .sidebar-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            color: #475569;
+            font-weight: 650;
+            border: 1px solid transparent;
+            transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
+        }
+
+        .sidebar-item i {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.9rem;
+            height: 1.9rem;
+            margin-right: 0.1rem;
+            border-radius: 0.65rem;
+            color: var(--brand-strong);
+            background: #fff2cc;
+            border: 1px solid #f8dfa0;
+            transition: all 180ms ease;
+        }
+
+        .sidebar-item:hover {
+            transform: translateX(3px);
+            background: #fffdfa;
+            border-color: #f5e8c7;
+        }
+
+        .sidebar-item.active {
+            color: #4a3206;
+            background: linear-gradient(100deg, #fff6dc 0%, #ffefc0 100%);
+            border-color: #efcf7e;
+            box-shadow: 0 10px 24px rgba(185, 133, 22, 0.22);
+        }
+
+        .sidebar-item.active i {
+            color: #ffffff;
+            background: linear-gradient(145deg, #d5a231 0%, #b78013 100%);
+            border-color: transparent;
+            box-shadow: 0 6px 16px rgba(171, 118, 10, 0.35);
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 1.3rem;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.045);
+        }
+
+        .card-hover {
+            transition: transform 260ms ease, box-shadow 260ms ease, filter 260ms ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 24px 42px rgba(198, 142, 26, 0.22);
+            filter: saturate(1.05);
+        }
+
+        .amount-sensitive {
+            transition: filter 240ms ease, opacity 240ms ease;
+        }
+
+        .badge {
+            border: 1px solid #f3ddb0;
+            border-radius: 999px;
+            font-size: 11px;
+            padding: 2px 10px;
+            color: #8a6411;
+            background: #fff9ea;
+        }
+
+        .tx-filter {
+            border-radius: 0.8rem;
+            border: 1px solid #e3e8ef;
+            background: #ffffff;
+            color: #475569;
+            font-weight: 650;
+            transition: all 180ms ease;
+        }
+
+        .tx-filter:hover {
+            border-color: #f3ddb0;
+            background: #fffdf7;
+            color: #6b4d10;
+        }
+
+        .loading-spinner {
+            width: 44px;
+            height: 44px;
+            border: 4px solid rgba(148, 163, 184, 0.3);
+            border-top-color: var(--brand);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        button.bg-amber-500,
+        button.bg-amber-600 {
+            background: linear-gradient(140deg, #f6d472 0%, #e7b63d 100%) !important;
+            color: #3f2c05 !important;
+            border: 1px solid #d9a737;
+            box-shadow: 0 10px 18px rgba(197, 143, 31, 0.25);
+        }
+
+        button.bg-amber-500:hover,
+        button.bg-amber-600:hover {
+            background: linear-gradient(140deg, #f8df95 0%, #edc868 100%) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 14px 22px rgba(197, 143, 31, 0.28);
+        }
+
+        #show-login,
+        #show-register {
+            transition: all 160ms ease;
+            border: 1px solid transparent;
+        }
+
+        #show-login.bg-white,
+        #show-register.bg-white {
+            border-color: #f2dfb4;
+            box-shadow: 0 5px 14px rgba(201, 153, 39, 0.18);
+        }
+
+        input,
+        select,
+        textarea {
+            border-radius: 0.85rem !important;
+            border-color: #dde3eb !important;
+            transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #d3a33a !important;
+            box-shadow: 0 0 0 4px var(--ring);
+            outline: none;
+        }
+
+        table thead {
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        body.dark-mode {
+            --nav-bg: #0b1120;
+            --content-bg: #070d18;
+            --panel: #0f172a;
+            --muted: #94a3b8;
+            --brand: #f7c84f;
+            --brand-strong: #e0ab2c;
+            --brand-soft: rgba(247, 200, 79, 0.08);
+            --text: #e2e8f0;
+            --border: #293548;
+            --ring: rgba(247, 200, 79, 0.18);
+            color: #e2e8f0;
+            background:
+                radial-gradient(900px 420px at 110% -10%, rgba(247, 200, 79, 0.12) 0%, transparent 64%),
+                linear-gradient(180deg, #060c17 0%, #070d18 100%);
+        }
+
+        body.dark-mode header {
+            background: rgba(10, 16, 30, 0.88) !important;
+            border-color: #293548 !important;
+        }
+
+        body.dark-mode .sidebar-item {
+            color: #c8d1df;
+        }
+
+        body.dark-mode .sidebar-item i {
+            color: #f4c957;
+            background: rgba(247, 200, 79, 0.12);
+            border-color: rgba(247, 200, 79, 0.18);
+        }
+
+        body.dark-mode .sidebar-item.active {
+            color: #f8e4a9;
+            background: linear-gradient(100deg, rgba(247, 200, 79, 0.16), rgba(247, 200, 79, 0.08));
+            border-color: rgba(247, 200, 79, 0.28);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+        }
+
+        body.dark-mode .sidebar-item.active i {
+            color: #0b1120;
+            background: linear-gradient(145deg, #f5d374 0%, #e0af34 100%);
+            border-color: transparent;
+        }
+
+        body.dark-mode .panel {
+            background: #0f172a;
+            border-color: #293548;
+            box-shadow: none;
+        }
+
+        body.dark-mode .badge {
+            background: rgba(247, 200, 79, 0.1);
+            border-color: rgba(247, 200, 79, 0.24);
+            color: #f8e4a9;
+        }
+
+        body.dark-mode .tx-filter {
+            background: #121c2f;
+            border-color: #2a3850;
+            color: #c8d1df;
+        }
+
+        body.dark-mode .tx-filter:hover {
+            border-color: rgba(247, 200, 79, 0.36);
+            color: #f8e4a9;
+        }
+
+        body.dark-mode .text-slate-900,
+        body.dark-mode .text-slate-800,
+        body.dark-mode .text-slate-700 {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .text-slate-600,
+        body.dark-mode .text-slate-500,
+        body.dark-mode .text-slate-400 {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .bg-slate-50,
+        body.dark-mode .bg-slate-100 {
+            background: #101a2c !important;
+        }
+
+        body.dark-mode .border-slate-100,
+        body.dark-mode .border-slate-200,
+        body.dark-mode .border-slate-300 {
+            border-color: #293548 !important;
+        }
+
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: #101a2c;
+            color: #e2e8f0;
+            border-color: #2a3850 !important;
+        }
+
+        body.dark-mode button.bg-amber-500,
+        body.dark-mode button.bg-amber-600 {
+            color: #111827 !important;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+        }
+
+        body.dark-mode table thead {
+            background: #101a2c !important;
+            color: #9fb0c9 !important;
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell min-h-screen flex flex-col lg:flex-row">
+    <aside class="w-full lg:w-72 lg:min-h-screen bg-[var(--nav-bg)] text-slate-700 flex flex-col shadow-lg border-r border-slate-200 overflow-y-auto">
+        <div class="px-7 py-8 border-b border-slate-200">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-amber-500 flex items-center justify-center text-white font-black text-xl">S</div>
+                <div>
+                    <h1 class="text-xl font-extrabold text-slate-900 leading-tight">SOMBANK</h1>
+                    <p class="text-[11px] text-slate-500 tracking-wide">Dijital Finans Merkezi</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="p-4 space-y-1.5">
+            <button onclick="showSection('accounts', this)" class="sidebar-item active w-full text-left px-4 py-3 rounded-xl transition hover:bg-white/60">
+                <i class="fa-solid fa-wallet mr-2 w-5"></i>Hesaplar
+            </button>
+            <button onclick="showSection('transfer', this)" class="sidebar-item w-full text-left px-4 py-3 rounded-xl transition hover:bg-white/60">
+                <i class="fa-solid fa-money-bill-transfer mr-2 w-5"></i>Para Transferi
+            </button>
+            <button onclick="showSection('bills', this)" class="sidebar-item w-full text-left px-4 py-3 rounded-xl transition hover:bg-white/60">
+                <i class="fa-solid fa-file-invoice-dollar mr-2 w-5"></i>Fatura Ödeme
+            </button>
+            <button onclick="showSection('investments', this)" class="sidebar-item w-full text-left px-4 py-3 rounded-xl transition hover:bg-white/60">
+                <i class="fa-solid fa-chart-pie mr-2 w-5"></i>Yatırım
+            </button>
+            <button onclick="showSection('cards', this)" class="sidebar-item w-full text-left px-4 py-3 rounded-xl transition hover:bg-white/60">
+                <i class="fa-regular fa-credit-card mr-2 w-5"></i>Kartlar
+            </button>
+            <button onclick="showSection('applications', this)" class="sidebar-item w-full text-left px-4 py-3 rounded-xl transition hover:bg-white/60">
+                <i class="fa-solid fa-file-signature mr-2 w-5"></i>Başvurular
+            </button>
+            <button onclick="showSection('simulator', this)" class="sidebar-item w-full text-left px-4 py-3 rounded-xl transition hover:bg-white/60">
+                <i class="fa-solid fa-calculator mr-2 w-5"></i>Kredi Simülatörü
+            </button>
+            <button onclick="showSection('settings', this)" class="sidebar-item w-full text-left px-4 py-3 rounded-xl transition hover:bg-white/60">
+                <i class="fa-solid fa-sliders mr-2 w-5"></i>Ayarlar
+            </button>
+        </nav>
+
+        <div class="mt-auto p-4 border-t border-slate-200">
+            <button id="logout-button" class="w-full px-4 py-3 rounded-xl bg-white hover:bg-amber-50 border border-amber-200 transition text-amber-900 font-semibold">
+                <i class="fa-solid fa-right-from-bracket mr-2"></i>Güvenli Çıkış
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col bg-[var(--content-bg)] min-w-0">
+        <header class="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between">
+            <div>
+                <h2 id="page-title" class="text-2xl font-bold text-slate-800">Hesaplar</h2>
+                <p class="text-sm text-slate-500">Finansal işlemlerini tek ekrandan yönet</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="theme-toggle-button" class="w-10 h-10 rounded-full border border-slate-300 text-slate-600 hover:text-amber-700 hover:bg-slate-100 transition" title="Koyu modu aç/kapat">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+                <button onclick="togglePrivacy()" class="w-10 h-10 rounded-full border border-slate-300 text-slate-600 hover:text-amber-700 hover:bg-slate-100 transition">
+                    <i id="privacy-icon" class="fa-regular fa-eye"></i>
+                </button>
+                <div class="text-right">
+                    <p id="header-username" class="font-semibold text-slate-900">-</p>
+                    <p id="header-tcno" class="text-xs text-slate-500">-</p>
+                </div>
+                <div id="header-avatar" class="w-11 h-11 rounded-full bg-amber-500 text-amber-950 flex items-center justify-center font-bold">?</div>
+            </div>
+        </header>
+
+        <div class="content-scroll flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
+            <section id="accounts" class="content-section active space-y-6">
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 rounded-[1.8rem] p-8 text-slate-900 shadow-xl bg-gradient-to-br from-amber-200 via-yellow-100 to-white relative overflow-hidden border border-amber-200">
+                        <div class="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-white/10 blur-2xl"></div>
+                        <p class="text-xs uppercase tracking-[0.22em] text-amber-900 font-semibold">Vadesiz TL Hesabı</p>
+                        <h3 id="dashboard-balance" class="text-5xl font-black mt-4 tracking-tight amount-sensitive">₺0,00</h3>
+                        <p class="mt-5 text-sm text-amber-900">IBAN: <span id="dashboard-iban" class="font-mono">-</span></p>
+                        <p class="mt-1 text-sm text-amber-900">Telefon: <span id="profile-phone">-</span></p>
+                        <div class="mt-6 flex flex-wrap gap-2">
+                            <span class="badge bg-white/15 text-amber-900 border-white/30">Anlık Güncel</span>
+                            <span class="badge bg-white/15 text-amber-900 border-white/30">Güvenli Hesap</span>
+                        </div>
+                    </div>
+
+                    <div class="panel p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-semibold text-slate-700">Hesap Özeti</p>
+                            <i class="fa-solid fa-chart-line text-slate-400"></i>
+                        </div>
+                        <p id="summary-tx-count" class="text-4xl font-black text-slate-900">0</p>
+                        <p class="text-sm text-slate-500">Toplam Hareket</p>
+                        <div class="space-y-2 pt-3 border-t border-slate-200">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-slate-500">Gelen</span>
+                                <span id="summary-incoming" class="font-semibold text-amber-700">₺0,00</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-slate-500">Giden</span>
+                                <span id="summary-outgoing" class="font-semibold text-amber-900">₺0,00</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-slate-500">Kredi Skoru</span>
+                                <span id="summary-credit-score" class="font-semibold text-amber-600">0</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-slate-500">Gunluk Transfer Limiti</span>
+                                <span id="summary-transfer-limit" class="font-semibold text-slate-700">₺0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="panel lg:col-span-2 p-6">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-semibold text-slate-800">Harcama Dağılımı</h4>
+                            <span class="badge">Chart.js</span>
+                        </div>
+                        <div class="mt-4 h-[280px]">
+                            <canvas id="spending-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="panel p-6">
+                        <h4 class="font-semibold text-slate-800">Piyasalar</h4>
+                        <p class="text-xs text-slate-500 mt-1">Statik başlangıç verisi</p>
+                        <div class="space-y-3 mt-4">
+                            <div class="rounded-xl border border-slate-200 px-4 py-3 bg-slate-50">
+                                <div class="text-xs text-slate-500">USD/TRY</div>
+                                <div id="market-usd" class="text-xl font-bold text-slate-900">₺36,90</div>
+                            </div>
+                            <div class="rounded-xl border border-slate-200 px-4 py-3 bg-slate-50">
+                                <div class="text-xs text-slate-500">EUR/TRY</div>
+                                <div id="market-eur" class="text-xl font-bold text-slate-900">₺39,80</div>
+                            </div>
+                            <div class="rounded-xl border border-slate-200 px-4 py-3 bg-slate-50">
+                                <div class="text-xs text-slate-500">Gram Altın</div>
+                                <div id="market-gold" class="text-xl font-bold text-slate-900">₺3.450,00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between flex-wrap gap-3">
+                        <h4 class="font-semibold text-slate-800">Hesabın Son Hareketleri</h4>
+                        <div class="flex gap-2">
+                            <button data-tx-filter="all" class="tx-filter px-3 py-1.5 text-sm rounded-lg border border-slate-300 bg-amber-500 text-amber-950">Tüm İşlemler</button>
+                            <button data-tx-filter="in" class="tx-filter px-3 py-1.5 text-sm rounded-lg border border-slate-300 text-slate-700">Gelen Paralar</button>
+                            <button data-tx-filter="out" class="tx-filter px-3 py-1.5 text-sm rounded-lg border border-slate-300 text-slate-700">Giden Paralar</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-slate-50 text-slate-500">
+                                <tr>
+                                    <th class="text-left px-6 py-3">Açıklama</th>
+                                    <th class="text-left px-6 py-3">Tarih</th>
+                                    <th class="text-right px-6 py-3">Tutar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-transactions"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="transfer" class="content-section">
+                <div class="panel max-w-3xl p-8">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">Para Transferi</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm text-slate-600">Alıcı IBAN</label>
+                            <input id="to-iban" type="text" placeholder="TR00 0000 0000 0000 0000 0000 00" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-600">Tutar</label>
+                            <input id="transfer-amount" type="number" min="0" step="0.01" placeholder="0.00" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-600">Açıklama</label>
+                            <input id="transfer-note" type="text" placeholder="Örn: Kira" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                        </div>
+                        <button id="transfer-button" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold">Transfer Yap</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="bills" class="content-section space-y-6">
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="panel lg:col-span-2 p-8">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-6">Fatura Ödeme</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm text-slate-600">Kurum</label>
+                                <select id="bill-institution" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3">
+                                    <option value="Elektrik">Elektrik</option>
+                                    <option value="Su">Su</option>
+                                    <option value="Dogalgaz">Doğalgaz</option>
+                                    <option value="Internet">İnternet</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Abone Numarası</label>
+                                <input id="bill-subscriber-no" type="text" placeholder="12345678" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Tutar</label>
+                                <input id="bill-amount" type="number" min="0" step="0.01" placeholder="0.00" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Açıklama (Opsiyonel)</label>
+                                <input id="bill-note" type="text" placeholder="Örn: Mayıs faturası" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <button id="bill-pay-button" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-slate-900 font-semibold">Fatura Öde</button>
+                        </div>
+                    </div>
+                    <div class="panel p-6">
+                        <h4 class="font-semibold text-slate-800">Hatırlatma Bildirimi</h4>
+                        <p class="text-sm text-slate-500 mt-1">Fatura tarihi için uygulama içi hatırlatma oluştur.</p>
+                        <div class="space-y-3 mt-4">
+                            <input id="reminder-title" type="text" placeholder="Örn: Elektrik faturası" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            <input id="reminder-datetime" type="datetime-local" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            <button id="add-reminder-button" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold">Hatırlatma Ekle</button>
+                        </div>
+                        <div class="mt-4">
+                            <p class="text-xs text-slate-500 mb-2">Planlanan Hatırlatmalar</p>
+                            <div id="reminders-list" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200">
+                        <h4 class="font-semibold text-slate-800">Fatura Geçmişi</h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-slate-50 text-slate-500">
+                                <tr>
+                                    <th class="text-left px-6 py-3">Kurum</th>
+                                    <th class="text-left px-6 py-3">Abone No</th>
+                                    <th class="text-left px-6 py-3">Not</th>
+                                    <th class="text-left px-6 py-3">Tarih</th>
+                                    <th class="text-right px-6 py-3">Tutar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bill-history-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="investments" class="content-section">
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <div class="panel p-8">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-6">Yatırım İşlemleri</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm text-slate-600">Yatırım Aracı</label>
+                                <select id="investment-asset" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3">
+                                    <option value="Altin">Altın</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="Fon Sepeti">Fon Sepeti</option>
+                                </select>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 flex justify-between items-center">
+                                <span class="text-sm text-slate-500">Birim Fiyat</span>
+                                <span id="investment-unit-price" class="font-semibold text-slate-800">₺0,00</span>
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Yatırım Tutarı (TL)</label>
+                                <input id="investment-amount" type="number" min="0" step="0.01" placeholder="0.00" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <button id="investment-buy-button" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold">Yatırım Yap</button>
+                        </div>
+                    </div>
+
+                    <div class="panel overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-200">
+                            <h4 class="font-semibold text-slate-800">Portföyüm</h4>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-slate-50 text-slate-500">
+                                    <tr>
+                                        <th class="text-left px-6 py-3">Varlık</th>
+                                        <th class="text-left px-6 py-3">Miktar</th>
+                                        <th class="text-right px-6 py-3">Toplam</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="investments-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="cards" class="content-section space-y-6">
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="card-hover lg:col-span-2 rounded-[1.8rem] p-8 text-amber-950 shadow-2xl bg-gradient-to-br from-amber-300 via-yellow-300 to-amber-200">
+                        <div class="flex justify-between items-start">
+                            <p id="card-alias-display" class="text-xs uppercase tracking-[0.25em] text-amber-900">SOMbank Kartim</p>
+                            <i class="fa-solid fa-wifi rotate-90"></i>
+                        </div>
+                        <p id="card-number" class="text-3xl mt-10 tracking-[0.2em]">---- ---- ---- ----</p>
+                        <div class="mt-10 flex justify-between items-end">
+                            <div>
+                                <p class="text-xs text-amber-900">Kart Sahibi</p>
+                                <p id="card-owner" class="font-semibold">-</p>
+                            </div>
+                            <div class="text-right">
+                                <p id="card-expiry" class="font-semibold">--/--</p>
+                                <p class="text-xs text-amber-900">VISA</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel p-6 space-y-3">
+                        <h4 class="font-semibold text-slate-800 mb-1">Kart Detayı</h4>
+                        <div class="flex justify-between text-sm"><span class="text-slate-500">Kart Limiti</span><span id="card-limit" class="font-semibold">₺0,00</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-slate-500">Kullanılan Limit</span><span id="card-used-limit" class="font-semibold">₺0,00</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-slate-500">Kalan Limit</span><span id="card-available-limit" class="font-semibold">₺0,00</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-slate-500">Kart Borcu</span><span id="card-debt" class="font-semibold text-amber-900">₺0,00</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-slate-500">Nakit Avans</span><span id="card-cash-limit" class="font-semibold">₺0,00</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-slate-500">Nakit Avans Kullanılan</span><span id="card-cash-used" class="font-semibold">₺0,00</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-slate-500">CVV</span><span id="card-cvv" class="font-semibold">---</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-slate-500">Ekstre Günü</span><span id="card-statement-day" class="font-semibold">-</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-slate-500">Kart Durumu</span><span id="card-status" class="font-semibold text-amber-700">Aktif</span></div>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="panel p-6">
+                        <h5 class="font-semibold text-slate-800 mb-3">Limit Artır</h5>
+                        <input id="card-limit-increase-amount" type="number" min="0" step="0.01" placeholder="Artış tutarı" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+                        <button id="card-limit-increase-button" class="w-full mt-3 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold">Limit Artır</button>
+                    </div>
+                    <div class="panel p-6">
+                        <h5 class="font-semibold text-slate-800 mb-3">Borç Öde</h5>
+                        <input id="card-debt-payment-amount" type="number" min="0" step="0.01" placeholder="Ödeme tutarı" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+                        <button id="card-debt-payment-button" class="w-full mt-3 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold">Borç Öde</button>
+                    </div>
+                    <div class="panel p-6">
+                        <h5 class="font-semibold text-slate-800 mb-3">Nakit Avans</h5>
+                        <input id="card-cash-advance-amount" type="number" min="0" step="0.01" placeholder="Nakit avans tutarı" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+                        <button id="card-cash-advance-button" class="w-full mt-3 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-slate-900 font-semibold">Nakit Avans Kullan</button>
+                    </div>
+                </div>
+
+                <div class="panel p-6">
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <h5 class="font-semibold text-slate-800">Kart Ayarları</h5>
+                        <span class="badge">Guncellenebilir</span>
+                    </div>
+
+                    <div class="grid lg:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-sm text-slate-600">Kart Takma Adı</label>
+                                <input id="card-settings-alias" type="text" maxlength="40" placeholder="SOMbank Kartim" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Gunluk Kart Harcama Limiti (TL)</label>
+                                <input id="card-settings-daily-limit" type="number" min="1" step="0.01" placeholder="20000" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Ekstre Kesim Gunu (1-28)</label>
+                                <input id="card-settings-statement-day" type="number" min="1" max="28" step="1" placeholder="15" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-600">Gunluk Kullanilan</span>
+                                    <span id="card-daily-spent" class="font-semibold text-amber-800">₺0,00</span>
+                                </div>
+                                <div class="flex justify-between mt-1">
+                                    <span class="text-slate-600">Gunluk Kalan</span>
+                                    <span id="card-daily-remaining" class="font-semibold text-amber-900">₺0,00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                <span>Internet Harcamalari Acik</span>
+                                <input id="card-settings-online" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
+                            </label>
+                            <label class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                <span>Temassiz Ozellik Acik</span>
+                                <input id="card-settings-contactless" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
+                            </label>
+                            <label class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                <span>Yurt Disi Harcamalari Acik</span>
+                                <input id="card-settings-international" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
+                            </label>
+                            <label class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                <span>Nakit Avans Acik</span>
+                                <input id="card-settings-cash-advance" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
+                            </label>
+                            <label class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                <span>Otomatik Borc Odeme</span>
+                                <input id="card-settings-auto-debt" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
+                            </label>
+                            <label class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                <span>Islem Bildirimi Acik</span>
+                                <input id="card-settings-notify" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
+                            </label>
+                            <label class="flex items-center justify-between rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm">
+                                <span>Karti Gecici Kapat</span>
+                                <input id="card-settings-frozen" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 mt-5">
+                        <button id="card-settings-save-button" class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold">Kart Ayarlarını Kaydet</button>
+                        <button id="card-settings-reset-button" class="px-6 py-3 rounded-xl bg-white hover:bg-amber-50 border border-amber-200 text-amber-900 font-semibold">Formu Sıfırla</button>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <div class="panel p-6">
+                        <h5 class="font-semibold text-slate-800 mb-4">Sanal Kart</h5>
+                        <div class="rounded-2xl p-5 bg-gradient-to-br from-amber-200 to-yellow-200 text-amber-950 shadow-xl">
+                            <p id="virtual-card-number" class="tracking-[0.2em] text-xl">---- ---- ---- ----</p>
+                            <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+                                <div><span class="text-amber-800">Son Kul.</span><p id="virtual-card-expiry" class="font-semibold">--/--</p></div>
+                                <div><span class="text-amber-800">CVV</span><p id="virtual-card-cvv" class="font-semibold">---</p></div>
+                                <div><span class="text-amber-800">Limit</span><p id="virtual-card-limit" class="font-semibold">₺0,00</p></div>
+                                <div><span class="text-amber-800">Kullanılan</span><p id="virtual-card-spent" class="font-semibold">₺0,00</p></div>
+                                <div><span class="text-amber-800">Kalan</span><p id="virtual-card-available" class="font-semibold">₺0,00</p></div>
+                                <div><span class="text-amber-800">Durum</span><p id="virtual-card-status" class="font-semibold">Pasif</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel p-6 space-y-4">
+                        <h5 class="font-semibold text-slate-800">Sanal Kart İşlemleri</h5>
+                        <div>
+                            <label class="text-sm text-slate-600">Kart Limiti</label>
+                            <input id="virtual-card-limit-input" type="number" min="0" step="0.01" placeholder="5000" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            <button id="virtual-card-create-button" class="w-full mt-3 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold">Sanal Kart Oluştur/Güncelle</button>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200">
+                            <label class="text-sm text-slate-600">Harcama Simülasyonu</label>
+                            <input id="virtual-card-spend-amount" type="number" min="0" step="0.01" placeholder="250.00" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            <button id="virtual-card-spend-button" class="w-full mt-3 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold">Sanal Kart ile Harca</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="applications" class="content-section">
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <div class="panel p-8">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-6">Kredi Başvuruları</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm text-slate-600">Başvuru Türü</label>
+                                <select id="application-loan-type" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3">
+                                    <option value="Ihtiyac Kredisi">İhtiyaç Kredisi</option>
+                                    <option value="Konut Kredisi">Konut Kredisi</option>
+                                    <option value="TasIt Kredisi">Taşıt Kredisi</option>
+                                    <option value="KOBI Kredisi">KOBİ Kredisi</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Kredi Tutarı</label>
+                                <input id="application-amount" type="number" min="0" step="0.01" placeholder="0.00" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Vade (Ay)</label>
+                                <input id="application-months" type="number" min="1" step="1" placeholder="12" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <button id="application-submit-button" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold">Başvuru Yap</button>
+                        </div>
+                    </div>
+
+                    <div class="panel overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-200">
+                            <h4 class="font-semibold text-slate-800">Başvuru Geçmişi</h4>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-slate-50 text-slate-500">
+                                    <tr>
+                                        <th class="text-left px-6 py-3">Tür</th>
+                                        <th class="text-left px-6 py-3">Tutar</th>
+                                        <th class="text-left px-6 py-3">Durum</th>
+                                        <th class="text-left px-6 py-3">Tarih</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="applications-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="simulator" class="content-section space-y-6">
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="panel lg:col-span-2 p-8">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                            <h3 class="text-2xl font-bold text-slate-800">Kredi Hesaplama Simülatörü</h3>
+                            <span class="badge">Gerçekçi ödeme planı</span>
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm text-slate-600">Kredi Türü</label>
+                                <select id="sim-loan-type" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3">
+                                    <option value="Ihtiyac Kredisi" data-rate="3.19">İhtiyaç Kredisi</option>
+                                    <option value="Konut Kredisi" data-rate="2.45">Konut Kredisi</option>
+                                    <option value="TasIt Kredisi" data-rate="3.05">Taşıt Kredisi</option>
+                                    <option value="KOBI Kredisi" data-rate="3.75">KOBİ Kredisi</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Faiz Oranı (% aylık)</label>
+                                <input id="sim-loan-rate" type="number" min="0" step="0.01" placeholder="3.25" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Kredi Tutarı</label>
+                                <input id="sim-loan-amount" type="number" min="0" step="0.01" placeholder="50000" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Vade (Ay)</label>
+                                <input id="sim-loan-months" type="number" min="1" step="1" placeholder="12" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-3 mt-5">
+                            <button id="simulate-loan-button" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold">Aylık Taksiti Hesapla</button>
+                            <button id="sim-apply-button" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold">Başvuru Formuna Aktar</button>
+                        </div>
+                    </div>
+
+                    <div class="panel p-6">
+                        <h4 class="font-semibold text-slate-800 mb-4">Simülasyon Sonucu</h4>
+                        <div class="space-y-3">
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                <div class="text-xs text-slate-500">Kredi Türü</div>
+                                <div id="sim-selected-type" class="text-lg font-semibold text-slate-900">İhtiyaç Kredisi</div>
+                            </div>
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                <div class="text-xs text-slate-500">Aylık Taksit</div>
+                                <div id="sim-monthly-payment" class="text-2xl font-bold text-slate-900">₺0,00</div>
+                            </div>
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                <div class="text-xs text-slate-500">Toplam Ödeme</div>
+                                <div id="sim-total-payment" class="text-2xl font-bold text-slate-900">₺0,00</div>
+                            </div>
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                <div class="text-xs text-slate-500">Toplam Faiz</div>
+                                <div id="sim-total-interest" class="text-2xl font-bold text-slate-900">₺0,00</div>
+                            </div>
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                <div class="text-xs text-slate-500">İlk Taksit Tarihi</div>
+                                <div id="sim-first-installment-date" class="text-lg font-semibold text-slate-900">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-3">
+                        <h4 class="font-semibold text-slate-800">Ödeme Planı</h4>
+                        <span id="sim-plan-note" class="text-xs text-slate-500">Hesaplama sonrası plan burada görünür.</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-slate-50 text-slate-500">
+                                <tr>
+                                    <th class="text-left px-6 py-3">Ay</th>
+                                    <th class="text-left px-6 py-3">Taksit</th>
+                                    <th class="text-left px-6 py-3">Anapara</th>
+                                    <th class="text-left px-6 py-3">Faiz</th>
+                                    <th class="text-right px-6 py-3">Kalan Borç</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sim-plan-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="settings" class="content-section space-y-6">
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="panel lg:col-span-2 p-8">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                            <h3 class="text-2xl font-bold text-slate-800">Kullanıcı Ayarları</h3>
+                            <span class="badge">Profil + güvenlik + kişiselleştirme</span>
+                        </div>
+
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm text-slate-600">Ad Soyad</label>
+                                <input id="settings-username" type="text" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Telefon</label>
+                                <input id="settings-phone" type="text" inputmode="numeric" maxlength="12" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">E-Posta</label>
+                                <input id="settings-email" type="email" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Dil</label>
+                                <select id="settings-language" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3">
+                                    <option value="tr-TR">Türkçe</option>
+                                    <option value="en-US">English</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Tema</label>
+                                <select id="settings-theme" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3">
+                                    <option value="light">Açık</option>
+                                    <option value="dark">Koyu</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-600">Günlük Transfer Limiti (TL)</label>
+                                <input id="settings-daily-transfer-limit" type="number" min="0" step="0.01" placeholder="100000" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="text-sm text-slate-600">Adres / İletişim Notu</label>
+                                <textarea id="settings-address" rows="3" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="grid sm:grid-cols-2 gap-4 mt-4">
+                            <div class="rounded-xl border border-slate-200 p-4 bg-slate-50">
+                                <p class="text-sm font-semibold text-slate-700">Bildirim Tercihleri</p>
+                                <div class="space-y-2 mt-3">
+                                    <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                        <input id="settings-notifications" type="checkbox" class="rounded border-slate-300" />
+                                        Uygulama içi bildirimler
+                                    </label>
+                                    <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                        <input id="settings-email-notify" type="checkbox" class="rounded border-slate-300" />
+                                        E-posta bildirimleri
+                                    </label>
+                                    <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                        <input id="settings-sms-notify" type="checkbox" class="rounded border-slate-300" />
+                                        SMS bildirimleri
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="rounded-xl border border-slate-200 p-4 bg-slate-50">
+                                <p class="text-sm font-semibold text-slate-700">Operasyon Tercihleri</p>
+                                <div class="space-y-2 mt-3">
+                                    <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                        <input id="settings-reminders" type="checkbox" class="rounded border-slate-300" />
+                                        Hatırlatmaları aç
+                                    </label>
+                                    <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                        <input id="settings-auto-bill-pay" type="checkbox" class="rounded border-slate-300" />
+                                        Fatura otomatik ödeme önerileri
+                                    </label>
+                                    <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                        <input id="settings-fast-login" type="checkbox" class="rounded border-slate-300" />
+                                        Hızlı giriş (bu cihaz)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3 mt-5">
+                            <button id="settings-save-button" class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold">Ayarları Kaydet</button>
+                            <button id="settings-reset-local-button" class="px-6 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold">Yerel Tercihleri Sıfırla</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="panel p-6">
+                            <h4 class="font-semibold text-slate-800 mb-3">Güvenlik Merkezi</h4>
+                            <div class="space-y-3">
+                                <input id="settings-current-password" type="password" placeholder="Mevcut şifre" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+                                <input id="settings-new-password" type="password" placeholder="Yeni şifre" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+                                <input id="settings-confirm-password" type="password" placeholder="Yeni şifre tekrar" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+                                <button id="settings-change-password-button" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold">Şifreyi Güncelle</button>
+                            </div>
+                        </div>
+
+                        <div class="panel p-6">
+                            <h4 class="font-semibold text-slate-800 mb-3">Hızlı Aksiyonlar</h4>
+                            <div class="space-y-3">
+                                <button id="settings-copy-iban-button" class="w-full py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold">IBAN Kopyala</button>
+                                <button id="settings-clear-reminders-button" class="w-full py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold">Hatırlatmaları Temizle</button>
+                            </div>
+                        </div>
+
+                        <div class="panel p-6 space-y-3">
+                            <h4 class="font-semibold text-slate-800">Hesap Durumu</h4>
+                            <div class="flex justify-between text-sm"><span class="text-slate-500">Son Giriş</span><span id="settings-last-login" class="font-semibold text-slate-800">-</span></div>
+                            <div class="flex justify-between text-sm"><span class="text-slate-500">Son Senkron</span><span id="settings-last-sync" class="font-semibold text-slate-800">-</span></div>
+                            <div class="flex justify-between text-sm"><span class="text-slate-500">Cihaz Durumu</span><span id="settings-device-status" class="font-semibold text-amber-700">Güvenli</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<div id="auth-modal" class="fixed inset-0 bg-amber-100/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="w-full max-w-md bg-white rounded-3xl p-7 shadow-2xl border border-slate-200">
+        <h3 id="auth-title" class="text-2xl font-bold text-slate-900">SOMbank Giriş</h3>
+        <p id="auth-subtitle" class="text-sm text-slate-600 mt-1">Giriş için sadece T.C. Kimlik No ve şifrenizi girin.</p>
+
+        <div class="grid grid-cols-2 gap-2 mt-5 p-1 bg-amber-100 rounded-xl">
+            <button id="show-login" class="rounded-lg bg-white py-2 font-medium text-amber-900">Giriş</button>
+            <button id="show-register" class="rounded-lg py-2 font-medium text-slate-500">Kayıt</button>
+        </div>
+
+        <div id="login-form" class="mt-4 space-y-3 rounded-2xl border border-amber-200 bg-white p-4">
+            <p class="text-xs font-semibold tracking-wide text-amber-700 uppercase">Hızlı Giriş</p>
+            <input id="login-tcno" type="text" inputmode="numeric" maxlength="11" placeholder="T.C. Kimlik No" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+            <input id="login-password" type="password" autocomplete="current-password" placeholder="Şifre" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+            <button id="login-button" class="w-full bg-amber-500 text-amber-950 rounded-xl py-3 font-semibold">Giriş Yap</button>
+        </div>
+
+        <div id="register-form" class="mt-4 space-y-3 hidden rounded-2xl border border-amber-300 bg-amber-50 p-4">
+            <p class="text-xs font-semibold tracking-wide text-amber-700 uppercase">Yeni Müşteri Kaydı</p>
+            <input id="register-tcno" type="text" inputmode="numeric" maxlength="11" placeholder="T.C. Kimlik No" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+            <input id="register-phone" type="text" inputmode="numeric" maxlength="12" placeholder="Telefon (5XX...)" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+            <input id="register-password" type="password" autocomplete="new-password" placeholder="Şifre" class="w-full rounded-xl border border-slate-300 px-4 py-3" />
+            <button id="register-button" class="w-full bg-amber-500 text-slate-900 rounded-xl py-3 font-semibold">Kayıt Ol</button>
+        </div>
+
+        <p id="auth-message" class="text-sm mt-4 text-slate-600"></p>
+        <p class="text-xs mt-2 text-slate-500">Demo giriş: T.C. <strong>11111111111</strong> | Şifre <strong>demo123</strong></p>
+    </div>
+</div>
+
+<div id="toast-container" class="fixed top-4 right-4 z-[80] space-y-3"></div>
+
+<div id="loading-overlay" class="fixed inset-0 bg-amber-100/70 backdrop-blur-sm hidden items-center justify-center z-[90]">
+    <div class="rounded-2xl bg-white px-8 py-6 border border-slate-200 shadow-2xl text-center">
+        <div class="loading-spinner mx-auto"></div>
+        <p id="loading-text" class="text-sm text-slate-700 mt-4">İşlem yapılıyor...</p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/app.js?v=20260223d"></script>
+</body>
+</html>
